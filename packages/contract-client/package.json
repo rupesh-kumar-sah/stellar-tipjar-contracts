@@ -5,9 +5,11 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "node init && tsc",
     "generate-bindings": "bash ../../scripts/generate-bindings.sh",
     "prepublishOnly": "npm run build"
   },
