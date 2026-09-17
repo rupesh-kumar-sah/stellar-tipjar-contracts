@@ -14,6 +14,8 @@ mod test_exhaustive;
 #[cfg(test)]
 mod test_invariants;
 #[cfg(test)]
+mod test_multitoken;
+#[cfg(test)]
 mod test_upgrade;
 
 /// Ledger TTL bump applied to instance and persistent storage on every write.
