@@ -32,6 +32,10 @@
 | `24` | `TokenAlreadyExists` |
 | `25` | `MaxTokensReached` |
 | `26` | `NoPendingFeeCollector` |
+| `27` | `AdminTransferExpired` |
+| `28` | `FeeCollectorTransferExpired` |
+| `29` | `AdminTransferAlreadyPending` |
+| `30` | `FeeCollectorTransferAlreadyPending` |
 
 ## Functions
 
@@ -322,6 +326,11 @@ client.revoke_operator(&creator, &operator);
 Proposes `new_admin` as the next admin. Takes effect only once
 `new_admin` calls `accept_admin` — a single-step transfer to a typo'd
 or unreachable address can never permanently lock out administration.
+The proposal expires after `ADMIN_TRANSFER_EXPIRY_LEDGERS` ledgers; if
+it is never accepted within that window, the pending address is
+effectively voided and `accept_admin` will reject it with
+`AdminTransferExpired`. Only one proposal may be pending at a time —
+cancel the existing one first with `cancel_admin_transfer`.
 
 ```rust
 pub fn propose_admin(admin: Address, new_admin: Address) -> ()
@@ -345,7 +354,9 @@ client.propose_admin(&admin, &new_admin);
 ### `accept_admin`
 
 Completes a two-step admin transfer. Must be called by the address
-named in the pending proposal.
+named in the pending proposal before `expiry_ledger` is reached.
+Panics with `AdminTransferExpired` if the proposal window has closed —
+the current admin must issue a fresh `propose_admin` in that case.
 
 ```rust
 pub fn accept_admin(new_admin: Address) -> ()
@@ -368,7 +379,8 @@ client.accept_admin(&new_admin);
 ### `cancel_admin_transfer`
 
 Abandons a pending admin transfer, leaving the current admin in
-place. Admin-only.
+place. Admin-only. Also clears an expired proposal so the admin can
+issue a fresh one without waiting for on-chain TTL eviction.
 
 ```rust
 pub fn cancel_admin_transfer(admin: Address) -> ()
@@ -408,7 +420,9 @@ client.get_admin();
 
 ### `get_pending_admin`
 
-Address currently proposed as the next admin, if any.
+Address currently proposed as the next admin, if any. Returns `None`
+if no proposal is pending (including if one existed but has expired and
+was cleaned up).
 
 ```rust
 pub fn get_pending_admin() -> Option<Address>
@@ -830,8 +844,11 @@ client.set_fee(&admin, &bps);
 Proposes `new_collector` as the next fee collector. Admin-only. Takes
 effect only once `new_collector` calls `accept_fee_collector` — a
 single-step change to a typo'd or malicious address could never be
-caught before it redirected protocol revenue. Only one proposal may be
-pending at a time; cancel the existing one first to replace it.
+caught before it redirected protocol revenue. The proposal expires
+after `ADMIN_TRANSFER_EXPIRY_LEDGERS` ledgers, mirroring the
+admin-transfer expiry (issue #413). Only one proposal may be pending at
+a time; cancel the existing one first with
+`cancel_fee_collector_transfer`.
 
 ```rust
 pub fn propose_fee_collector(admin: Address, new_collector: Address) -> ()
@@ -855,7 +872,9 @@ client.propose_fee_collector(&admin, &new_collector);
 ### `accept_fee_collector`
 
 Completes a two-step fee-collector transfer. Must be called by the
-address named in the pending proposal.
+address named in the pending proposal before `expiry_ledger` is
+reached. Panics with `FeeCollectorTransferExpired` if the window has
+closed.
 
 ```rust
 pub fn accept_fee_collector(new_collector: Address) -> ()
@@ -878,7 +897,8 @@ client.accept_fee_collector(&new_collector);
 ### `cancel_fee_collector_transfer`
 
 Abandons a pending fee-collector transfer, leaving the current
-collector in place. Admin-only.
+collector in place. Admin-only. Also clears an expired proposal so the
+admin can issue a fresh one.
 
 ```rust
 pub fn cancel_fee_collector_transfer(admin: Address) -> ()

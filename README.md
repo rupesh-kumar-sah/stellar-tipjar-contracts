@@ -191,6 +191,19 @@ re-exports the generated client plus `TESTNET_CONTRACT_ID` /
 file is the single source of truth for which contract ID each network
 points at. See `packages/contract-client/README.md` for usage.
 
+## API Documentation
+
+Contract documentation is automatically extracted from doc comments and generated into `docs/api/`:
+- **Markdown**: [`docs/api/README.md`](docs/api/README.md) — complete entrypoints and error variant reference.
+- **HTML**: [`docs/api/index.html`](docs/api/index.html) — interactive API reference.
+- **JSON**: [`docs/api/api.json`](docs/api/api.json) — machine-readable schema for tooling and indexers.
+
+To regenerate documentation locally after contract changes:
+```bash
+bash scripts/generate-docs.sh
+```
+Documentation consistency is enforced in CI by `.github/workflows/generate-docs.yml`.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for branching strategy, coding
