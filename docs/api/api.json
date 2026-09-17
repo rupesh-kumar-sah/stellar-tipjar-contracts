@@ -202,7 +202,7 @@
     },
     {
       "name": "propose_admin",
-      "doc": "Proposes `new_admin` as the next admin. Takes effect only once\n`new_admin` calls `accept_admin` — a single-step transfer to a typo'd\nor unreachable address can never permanently lock out administration.",
+      "doc": "Proposes `new_admin` as the next admin. Takes effect only once\n`new_admin` calls `accept_admin` — a single-step transfer to a typo'd\nor unreachable address can never permanently lock out administration.\nThe proposal expires after `ADMIN_TRANSFER_EXPIRY_LEDGERS` ledgers; if\nit is never accepted within that window, the pending address is\neffectively voided and `accept_admin` will reject it with\n`AdminTransferExpired`. Only one proposal may be pending at a time —\ncancel the existing one first with `cancel_admin_transfer`.",
       "params": [
         {
           "name": "admin",
@@ -217,7 +217,7 @@
     },
     {
       "name": "accept_admin",
-      "doc": "Completes a two-step admin transfer. Must be called by the address\nnamed in the pending proposal.",
+      "doc": "Completes a two-step admin transfer. Must be called by the address\nnamed in the pending proposal before `expiry_ledger` is reached.\nPanics with `AdminTransferExpired` if the proposal window has closed —\nthe current admin must issue a fresh `propose_admin` in that case.",
       "params": [
         {
           "name": "new_admin",
@@ -228,7 +228,7 @@
     },
     {
       "name": "cancel_admin_transfer",
-      "doc": "Abandons a pending admin transfer, leaving the current admin in\nplace. Admin-only.",
+      "doc": "Abandons a pending admin transfer, leaving the current admin in\nplace. Admin-only. Also clears an expired proposal so the admin can\nissue a fresh one without waiting for on-chain TTL eviction.",
       "params": [
         {
           "name": "admin",
@@ -245,7 +245,7 @@
     },
     {
       "name": "get_pending_admin",
-      "doc": "Address currently proposed as the next admin, if any.",
+      "doc": "Address currently proposed as the next admin, if any. Returns `None`\nif no proposal is pending (including if one existed but has expired and\nwas cleaned up).",
       "params": [],
       "returns": "Option<Address>"
     },
@@ -440,7 +440,7 @@
     },
     {
       "name": "propose_fee_collector",
-      "doc": "Proposes `new_collector` as the next fee collector. Admin-only. Takes\neffect only once `new_collector` calls `accept_fee_collector` — a\nsingle-step change to a typo'd or malicious address could never be\ncaught before it redirected protocol revenue. Only one proposal may be\npending at a time; cancel the existing one first to replace it.",
+      "doc": "Proposes `new_collector` as the next fee collector. Admin-only. Takes\neffect only once `new_collector` calls `accept_fee_collector` — a\nsingle-step change to a typo'd or malicious address could never be\ncaught before it redirected protocol revenue. The proposal expires\nafter `ADMIN_TRANSFER_EXPIRY_LEDGERS` ledgers, mirroring the\nadmin-transfer expiry (issue #413). Only one proposal may be pending at\na time; cancel the existing one first with\n`cancel_fee_collector_transfer`.",
       "params": [
         {
           "name": "admin",
@@ -455,7 +455,7 @@
     },
     {
       "name": "accept_fee_collector",
-      "doc": "Completes a two-step fee-collector transfer. Must be called by the\naddress named in the pending proposal.",
+      "doc": "Completes a two-step fee-collector transfer. Must be called by the\naddress named in the pending proposal before `expiry_ledger` is\nreached. Panics with `FeeCollectorTransferExpired` if the window has\nclosed.",
       "params": [
         {
           "name": "new_collector",
@@ -466,7 +466,7 @@
     },
     {
       "name": "cancel_fee_collector_transfer",
-      "doc": "Abandons a pending fee-collector transfer, leaving the current\ncollector in place. Admin-only.",
+      "doc": "Abandons a pending fee-collector transfer, leaving the current\ncollector in place. Admin-only. Also clears an expired proposal so the\nadmin can issue a fresh one.",
       "params": [
         {
           "name": "admin",
@@ -696,6 +696,22 @@
     {
       "name": "NoPendingFeeCollector",
       "code": 26
+    },
+    {
+      "name": "AdminTransferExpired",
+      "code": 27
+    },
+    {
+      "name": "FeeCollectorTransferExpired",
+      "code": 28
+    },
+    {
+      "name": "AdminTransferAlreadyPending",
+      "code": 29
+    },
+    {
+      "name": "FeeCollectorTransferAlreadyPending",
+      "code": 30
     }
   ]
 }
