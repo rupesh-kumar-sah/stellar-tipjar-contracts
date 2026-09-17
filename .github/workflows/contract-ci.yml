@@ -40,6 +40,10 @@ jobs:
       - name: Run tests
         run: cargo test -p tipjar
 
+      - name: Build and verify SDK examples
+        run: cargo test -p tipjar-sdk --examples && cargo run -p tipjar-sdk --example simulate_tip
+
+
       - name: Build WASM
         run: cargo build -p tipjar --target wasm32v1-none --release
 
