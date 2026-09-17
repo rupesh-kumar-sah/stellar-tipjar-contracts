@@ -45,6 +45,10 @@ jobs:
       - name: Run integration test suite
         run: cargo test -p tipjar-integration-tests
 
+      - name: Build and run SDK examples
+        run: cargo test -p tipjar-sdk --examples && cargo run -p tipjar-sdk --example simulate_tip
+
+
       - name: Install stellar-cli native build dependencies
         # stellar-cli pulls in a keyring crate that links against libdbus,
         # and a hidapi crate (Ledger hardware-wallet support) that links
