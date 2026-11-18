@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "node init && tsc",
+    "build": "tsc",
     "generate-bindings": "bash ../../scripts/generate-bindings.sh",
     "prepublishOnly": "npm run build"
   },
